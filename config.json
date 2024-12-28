@@ -1,0 +1,17 @@
+{
+	"last_svg": "G:\\Meine Ablage\\Streaming\\20_Thumbnails\\Templates\\2022 - Passionszeit - LEGO-Woche.svg",
+	"last_export": "G:\\Meine Ablage\\Streaming\\20_Thumbnails",
+	"client_settings": {
+		"replacement_pattern": "SUNDAY_DATE",
+		"date_format": "\u003cdd\u003e. \u003cMM\u003e \u003cyyyy\u003e",
+		"export_days": {
+			"Monday": false,
+			"Tuesday": false,
+			"Wednesday": false,
+			"Thursday": false,
+			"Friday": false,
+			"Saturday": false,
+			"Sunday": true
+		}
+	}
+}
