@@ -1,4 +1,3 @@
-*.exe
-client
-export
-templates
+build/bin
+node_modules
+frontend/dist
