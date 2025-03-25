@@ -22,7 +22,7 @@ import {
 
 function App() {
 	const [resultText, setResultText] = useState(
-		"Please enter your name below 👇"
+		"Please enter your name below 👇",
 	);
 	const [name, setName] = useState("");
 	const updateName = (e: any) => setName(e.target.value);
@@ -51,7 +51,7 @@ function App() {
 				</NavbarContent>
 
 				<NavbarContent justify="center">
-					<NavbarItem className="italic font-mono">
+					<NavbarItem className="font-mono italic">
 						name of the template
 					</NavbarItem>
 				</NavbarContent>
@@ -65,7 +65,7 @@ function App() {
 				</NavbarContent>
 			</Navbar>
 			<img src={logo} id="logo" alt="logo" />
-			<div className="flex flex-col gap-2 w-16">
+			<div className="flex w-16 flex-col gap-2">
 				<DateRangePicker />
 				<TimeInput />
 			</div>
