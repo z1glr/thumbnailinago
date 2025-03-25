@@ -11,7 +11,6 @@ import (
 	"path"
 	"runtime"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
@@ -73,15 +72,14 @@ func postExport(c *fiber.Ctx) responseMessage {
 				if exportDays, err := strucToMap(Config.ClientSettings.ExportDays); err != nil {
 					response.Status = http.StatusInternalServerError
 				} else {
-
-					cError := make(chan svgChanMsg)
-
-					var waitGroup sync.WaitGroup
+					errors := map[time.Time]error{}
 
 					// export the range
 					for dtUntil.Sub(dtFrom) >= 0 {
 						if exportDays[dtFrom.Weekday().String()] == true {
-							go exportSvg(dtFrom, dir, body.Type, cError, &waitGroup)
+							if err := exportSvg(dtFrom, dir, body.Type); err != nil {
+								errors[dtFrom] = err
+							}
 						}
 
 						dtFrom = dtFrom.AddDate(0, 0, 1)
@@ -91,23 +89,17 @@ func postExport(c *fiber.Ctx) responseMessage {
 					for _, strDt := range body.Custom {
 						if dt, err := time.Parse(time.DateTime, fmt.Sprintf("%s %s", strDt, body.Time)); err != nil {
 							fmt.Printf("can't parse %q as date", strDt)
-						} else {
-							go exportSvg(dt, dir, body.Type, cError, &waitGroup)
+						} else if err := exportSvg(dt, dir, body.Type); err != nil {
+							errors[dtFrom] = err
 						}
 					}
 
-					go func() {
-						waitGroup.Wait()
-						close(cError)
-					}()
-
-					v, ok := <-cError
-					for ok {
-						fmt.Printf("thumbnail creation failed for %q: %v", v.Day.Format(time.DateTime), v.Error)
+					if len(errors) > 0 {
+						for dt, err := range errors {
+							fmt.Printf("thumbnail creation failed for %q: %v", dt.Format(time.DateTime), err)
+						}
 
 						response.Status = http.StatusInternalServerError
-
-						v, ok = <-cError
 					}
 				}
 			}
@@ -165,29 +157,15 @@ func formatDate(dt time.Time) string {
 	return dateString
 }
 
-type svgChanMsg struct {
-	Day   time.Time
-	Error error
-}
-
-func exportSvg(dt time.Time, dir, ext string, c chan svgChanMsg, wg *sync.WaitGroup) {
-	wg.Add(1)
-	defer wg.Done()
-
-	msg := svgChanMsg{
-		Day: dt,
-	}
-
+func exportSvg(dt time.Time, dir, ext string) error {
 	if tempFile, err := os.CreateTemp(os.TempDir(), "thumbnailnago.*.svg"); err != nil {
-		msg.Error = fmt.Errorf("can't create tempfile: %v", err)
-		c <- msg
+		return fmt.Errorf("can't create tempfile: %v", err)
 	} else {
 		defer os.Remove(tempFile.Name())
 		defer tempFile.Close()
 
 		if err := os.WriteFile(tempFile.Name(), []byte(strings.ReplaceAll(svg.Str, Config.ClientSettings.ReplacementPattern, formatDate(dt))), 0o644); err != nil {
-			msg.Error = fmt.Errorf("can't write svg: %v", err)
-			c <- msg
+			return fmt.Errorf("can't write svg: %v", err)
 		} else {
 			filename := dt.Format(fmt.Sprintf("2006-01-02.15-04-05.%s", ext))
 			var exportFile string
@@ -200,8 +178,7 @@ func exportSvg(dt time.Time, dir, ext string, c chan svgChanMsg, wg *sync.WaitGr
 			command := exec.Command("inkscape", tempFile.Name(), "-o", exportFile)
 
 			if err := command.Run(); err != nil {
-				msg.Error = fmt.Errorf("can't run inkscape: %v", err)
-				c <- msg
+				return fmt.Errorf("can't run inkscape: %v", err)
 			} else {
 				if ext != "png" {
 					defer os.Remove(exportFile)
@@ -211,22 +188,21 @@ func exportSvg(dt time.Time, dir, ext string, c chan svgChanMsg, wg *sync.WaitGr
 					}
 
 					if fIn, err := os.Open(exportFile); err != nil {
-						msg.Error = fmt.Errorf("can't open exported png: %v", err)
-						c <- msg
+						return fmt.Errorf("can't open exported png: %v", err)
 					} else if fOut, err := os.Create(path.Join(dir, filename)); err != nil {
-						msg.Error = fmt.Errorf("can't create jpg: %v", err)
-						c <- msg
+						return fmt.Errorf("can't create jpg: %v", err)
 					} else if img, err := png.Decode(fIn); err != nil {
-						msg.Error = fmt.Errorf("can't decode png: %v", err)
-						c <- msg
+						return fmt.Errorf("can't decode png: %v", err)
 					} else if err := jpeg.Encode(fOut, img, &options); err != nil {
-						msg.Error = fmt.Errorf("can't encode as jpg: %v", err)
-						c <- msg
+						return fmt.Errorf("can't encode as jpg: %v", err)
 					} else {
 						defer fIn.Close()
 						defer fOut.Close()
-					}
 
+						return nil
+					}
+				} else {
+					return nil
 				}
 			}
 		}
