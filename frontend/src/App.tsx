@@ -1,74 +1,183 @@
-import { useState } from "react";
-import logo from "./assets/images/logo-universal.png";
-import "./App.css";
-import { Greet } from "../wailsjs/go/main/App";
+import { KeyboardEvent, useState } from "react";
+import { getLocalTimeZone, parseTime, today } from "@internationalized/date";
 import {
+	addToast,
 	Button,
-	ButtonGroup,
+	DatePicker,
 	DateRangePicker,
-	Navbar,
-	NavbarContent,
-	NavbarItem,
+	DateValue,
+	Listbox,
+	ListboxItem,
+	Modal,
+	ModalBody,
+	ModalContent,
+	ModalFooter,
+	ModalHeader,
+	RangeValue,
+	Spinner,
 	TimeInput,
+	TimeInputValue,
+	Tooltip,
 } from "@heroui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-	faCog,
-	faFile,
-	faFileUpload,
-	faFloppyDisk,
-	faFolderOpen,
-} from "@fortawesome/free-solid-svg-icons";
+import { faAdd, faX } from "@fortawesome/free-solid-svg-icons";
+
+import { GenerateThumbnails } from "../wailsjs/go/main/App";
+import NavigationBar from "./NavigationBar";
+import { svgStore } from "./zustand";
 
 function App() {
-	const [resultText, setResultText] = useState(
-		"Please enter your name below 👇",
-	);
-	const [name, setName] = useState("");
-	const updateName = (e: any) => setName(e.target.value);
-	const updateResultText = (result: string) => setResultText(result);
+	const [showSpinner, setShowSpinner] = useState(false);
 
-	function greet() {
-		Greet(name).then(updateResultText);
+	const svg = svgStore((state) => state.SVG);
+
+	const [dateRange, setDateRange] = useState<RangeValue<DateValue> | null>({
+		start: today(getLocalTimeZone()),
+		end: today(getLocalTimeZone()).add({ weeks: 1 }),
+	});
+	const [time, setTime] = useState<TimeInputValue | null>(
+		parseTime("10:00:00"),
+	);
+
+	const [customDates, setCustomDates] = useState<DateValue[]>([]);
+	const [dateInput, setDateInput] = useState<DateValue | null>(null);
+
+	function addCustomDate(e?: KeyboardEvent) {
+		if (e === undefined || e.key === "Enter") {
+			if (dateInput) {
+				setCustomDates([...customDates, dateInput]);
+			}
+		}
+	}
+
+	async function generate() {
+		if (dateRange && time) {
+			setShowSpinner(true);
+
+			let result: number = 0;
+
+			try {
+				result = await GenerateThumbnails({
+					from: dateRange.start.toString(),
+					to: dateRange.end.toString(),
+					time: time.toString(),
+					customDates: customDates.map((dt) => dt.toString()),
+				});
+			} catch (err) {
+				addToast({
+					title: "Can't generate thumbnails",
+					description: `${err}`,
+					color: "danger",
+				});
+			} finally {
+				if (result > 0) {
+					addToast({
+						title: "Export successful",
+						description: `Exported ${result} thumbnails`,
+						color: "success",
+					});
+				}
+
+				setShowSpinner(false);
+			}
+		}
 	}
 
 	return (
 		<>
-			<Navbar>
-				<NavbarContent>
-					<ButtonGroup>
-						<Button isIconOnly>
-							<NavbarItem>
-								<FontAwesomeIcon icon={faFolderOpen} />
-							</NavbarItem>
-						</Button>
-						<Button isIconOnly>
-							<NavbarItem>
-								<FontAwesomeIcon icon={faCog} />
-							</NavbarItem>
-						</Button>
-					</ButtonGroup>
-				</NavbarContent>
+			<NavigationBar exportDisabled={svg.length === 0} onGenerate={generate} />
 
-				<NavbarContent justify="center">
-					<NavbarItem className="font-mono italic">
-						name of the template
-					</NavbarItem>
-				</NavbarContent>
+			<div className="flex h-[100vh] w-[100vw] flex-col">
+				<div className="flex flex-1 gap-2 p-4">
+					<div className="flex flex-1 flex-col gap-2">
+						<h3 className="text-lg font-semibold">Preview</h3>
+						<div className="my-auto overflow-clip rounded-small border-small border-default-200">
+							{svg.length > 0 ? (
+								<img
+									src={`data:image/svg+xml;utf-i,${encodeURIComponent(svg)}`}
+								/>
+							) : (
+								<div className="flex aspect-video items-center justify-center whitespace-pre p-20">
+									Open a template
+								</div>
+							)}
+						</div>
+					</div>
+					{/* <img src={logo} className="w-1/2" /> */}
+					<div className="flex flex-col gap-2">
+						<div className="flex gap-2">
+							<DateRangePicker
+								aria-label="creation range"
+								label="Creation range"
+								labelPlacement="inside"
+								showMonthAndYearPickers
+								value={dateRange}
+								onChange={setDateRange}
+							/>
+							<TimeInput
+								className="w-max"
+								label="Time"
+								value={time}
+								onChange={setTime}
+							/>
+						</div>
 
-				<NavbarContent justify="end">
-					<NavbarItem>
-						<Button isIconOnly>
-							<FontAwesomeIcon icon={faFloppyDisk} />
-						</Button>
-					</NavbarItem>
-				</NavbarContent>
-			</Navbar>
-			<img src={logo} id="logo" alt="logo" />
-			<div className="flex w-16 flex-col gap-2">
-				<DateRangePicker />
-				<TimeInput />
+						<h3>Custom Dates</h3>
+						<div className="flex-1 rounded-small border-small border-default-200 px-1 py-2">
+							<Listbox
+								aria-label="custom dates"
+								variant="light"
+								emptyContent="No custom dates"
+							>
+								{customDates.map((item, index) => (
+									<ListboxItem
+										key={item.toString() + index.toString()}
+										endContent={
+											<Button
+												aria-label={`delete custom date ${item.toString()}`}
+												isIconOnly
+												variant="light"
+												size="sm"
+												onPress={() =>
+													setCustomDates(customDates.toSpliced(index, 1))
+												}
+											>
+												<FontAwesomeIcon size="xs" icon={faX} />
+											</Button>
+										}
+									>
+										{item.toString()}
+									</ListboxItem>
+								))}
+							</Listbox>
+						</div>
+						<div className="flex items-center gap-2">
+							<Tooltip content="add date">
+								<Button isIconOnly onPress={() => addCustomDate()}>
+									<FontAwesomeIcon icon={faAdd} />
+								</Button>
+							</Tooltip>
+							<DatePicker
+								label="custom date"
+								value={dateInput}
+								onChange={setDateInput}
+								onKeyUp={addCustomDate}
+							/>
+						</div>
+					</div>
+				</div>
 			</div>
+			<Modal isOpen={showSpinner} backdrop="blur" hideCloseButton>
+				<ModalContent>
+					<ModalHeader>
+						<h1>Exporting Thumbnails</h1>
+					</ModalHeader>
+					<ModalBody>
+						<Spinner />
+					</ModalBody>
+					<ModalFooter />
+				</ModalContent>
+			</Modal>
 		</>
 	);
 }
