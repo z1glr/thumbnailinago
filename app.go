@@ -136,7 +136,7 @@ func (a *App) OpenTemplate() (FrontendTemplate, error) {
 	// check, wether the directory of the last svg-file exists
 	dir := filepath.Dir(Settings.Paths.SVG)
 
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
+	if _, err := os.Stat(dir); err != nil {
 		dir = ""
 	}
 
@@ -200,9 +200,15 @@ func (a *App) GenerateThumbnails(job GenerateThumbnailsJob) (int, error) {
 	} else if endDate, err := time.Parse(time.DateOnly, job.To); err != nil {
 		return exportCount, err
 	} else {
+		dir := Settings.SettingsYAML.Paths.Export
+
+		if _, err := os.Stat(dir); err != nil {
+			dir = ""
+		}
+
 		// ask for the output-directory
 		if outDir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
-			DefaultDirectory:     Settings.Paths.Export,
+			DefaultDirectory:     dir,
 			Title:                "Generate Thumbnails",
 			CanCreateDirectories: true,
 		}); err != nil {
