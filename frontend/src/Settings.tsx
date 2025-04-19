@@ -30,34 +30,13 @@ const locales: { key: string; label: string }[] = [
 ];
 
 const weekdays = [
-	{
-		key: "sunday",
-		label: "Sunday",
-	},
-	{
-		key: "monday",
-		label: "Monday",
-	},
-	{
-		key: "tuesday",
-		label: "Tuesday",
-	},
-	{
-		key: "wednesday",
-		label: "Wednesday",
-	},
-	{
-		key: "thursday",
-		label: "Thursday",
-	},
-	{
-		key: "friday",
-		label: "Friday",
-	},
-	{
-		key: "saturday",
-		label: "Saturday",
-	},
+	"Sunday",
+	"Monday",
+	"Tuesday",
+	"Wednesday",
+	"Thursday",
+	"Friday",
+	"Saturday",
 ];
 
 export default function Settings({
@@ -146,8 +125,8 @@ export default function Settings({
 						onValueChange={setDays}
 					>
 						{weekdays.map((day) => (
-							<Checkbox aria-label={day.label} key={day.key} value={day.key}>
-								{day.label}
+							<Checkbox aria-label={day} key={day} value={day}>
+								{day}
 							</Checkbox>
 						))}
 					</CheckboxGroup>

@@ -80,16 +80,12 @@ func (a *App) GetSettings() FrontendSettings {
 
 // stores the settings
 func (a *App) SetSettings(newSettings FrontendSettings) error {
-	runtime.LogDebugf(a.ctx, "%v:", Settings.SettingsYAML)
-
 	Settings.SettingsYAML.Frontend = newSettings
 
 	// recreate the templates because there may be a new date-format string
 	if err := Settings.RecreateTemplates(); err != nil {
 		return err
 	}
-
-	runtime.LogDebugf(a.ctx, "%v:", Settings.SettingsYAML)
 
 	return nil
 }
@@ -206,10 +202,8 @@ func (a *App) GenerateThumbnails(job GenerateThumbnailsJob) (int, error) {
 	} else if dir, err := filepath.EvalSymlinks(Settings.Paths.Export); err != nil {
 		return 0, err
 	} else {
-		if i, err := os.Stat(dir); err != nil {
+		if _, err := os.Stat(dir); err != nil {
 			dir = ""
-		} else {
-			runtime.LogDebugf(a.ctx, "%v", i.Name())
 		}
 
 		// ask for the output-directory
