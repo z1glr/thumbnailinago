@@ -73,6 +73,7 @@ export default function NavigationBar({
 	return (
 		<>
 			<Navbar
+				position="static"
 				classNames={{
 					wrapper: "max-w-full",
 				}}
@@ -117,7 +118,6 @@ export default function NavigationBar({
 					</NavbarItem>
 				</NavbarContent>
 			</Navbar>
-			;
 			<Settings
 				isOpen={showSettings}
 				onOpenChange={(state) => {

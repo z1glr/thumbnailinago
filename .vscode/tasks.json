@@ -110,7 +110,7 @@
 		"type": "npm",
 		"script": "lint",
 		"path": "frontend",
-		"problemMatcher": [],
+		"problemMatcher": ["$eslint-stylish"],
 		"label": "npm: lint - frontend",
 		"detail": "eslint ."
 	}

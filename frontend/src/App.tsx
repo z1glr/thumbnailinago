@@ -84,86 +84,81 @@ function App() {
 	}
 
 	return (
-		<>
+		<div className="flex h-screen w-screen flex-col">
 			<NavigationBar exportDisabled={svg.length === 0} onGenerate={generate} />
 
-			<div className="flex h-[100vh] w-[100vw] flex-col">
-				<div className="flex flex-1 gap-2 p-4">
-					<div className="flex flex-1 flex-col gap-2">
-						<h3 className="text-lg font-semibold">Preview</h3>
-						<div className="my-auto overflow-clip rounded-small border-small border-default-200">
-							{svg.length > 0 ? (
-								<img
-									src={`data:image/svg+xml;utf-i,${encodeURIComponent(svg)}`}
-								/>
-							) : (
-								<div className="flex aspect-video items-center justify-center whitespace-pre p-20">
-									Open a template
-								</div>
-							)}
-						</div>
+			<div className="m-4 flex flex-1 justify-between gap-2">
+				<div className="flex flex-col">
+					<h3 className="text-lg font-semibold">Preview</h3>
+					<div className="my-auto flex aspect-video h-[80vh] items-center justify-center overflow-hidden rounded-small border-small border-default-200">
+						{svg.length > 0 ? (
+							<img
+								src={`data:image/svg+xml;utf-8,${encodeURIComponent(svg)}`}
+							/>
+						) : (
+							<div>Open a template</div>
+						)}
 					</div>
-					{/* <img src={logo} className="w-1/2" /> */}
-					<div className="flex flex-col gap-2">
-						<div className="flex gap-2">
-							<DateRangePicker
-								aria-label="creation range"
-								label="Creation range"
-								labelPlacement="inside"
-								showMonthAndYearPickers
-								value={dateRange}
-								onChange={setDateRange}
-							/>
-							<TimeInput
-								className="w-max"
-								label="Time"
-								value={time}
-								onChange={setTime}
-							/>
-						</div>
+				</div>
+				<div className="flex flex-1 flex-col gap-2">
+					<div className="flex gap-2">
+						<DateRangePicker
+							aria-label="creation range"
+							label="Creation range"
+							labelPlacement="inside"
+							showMonthAndYearPickers
+							value={dateRange}
+							onChange={setDateRange}
+						/>
+						<TimeInput
+							className="w-max"
+							label="Time"
+							value={time}
+							onChange={setTime}
+						/>
+					</div>
 
-						<h3>Custom Dates</h3>
-						<div className="flex-1 rounded-small border-small border-default-200 px-1 py-2">
-							<Listbox
-								aria-label="custom dates"
-								variant="light"
-								emptyContent="No custom dates"
-							>
-								{customDates.map((item, index) => (
-									<ListboxItem
-										key={item.toString() + index.toString()}
-										endContent={
-											<Button
-												aria-label={`delete custom date ${item.toString()}`}
-												isIconOnly
-												variant="light"
-												size="sm"
-												onPress={() =>
-													setCustomDates(customDates.toSpliced(index, 1))
-												}
-											>
-												<FontAwesomeIcon size="xs" icon={faX} />
-											</Button>
-										}
-									>
-										{item.toString()}
-									</ListboxItem>
-								))}
-							</Listbox>
-						</div>
-						<div className="flex items-center gap-2">
-							<Tooltip content="add date">
-								<Button isIconOnly onPress={() => addCustomDate()}>
-									<FontAwesomeIcon icon={faAdd} />
-								</Button>
-							</Tooltip>
-							<DatePicker
-								label="custom date"
-								value={dateInput}
-								onChange={setDateInput}
-								onKeyUp={addCustomDate}
-							/>
-						</div>
+					<h3>Custom Dates</h3>
+					<div className="flex-1 rounded-small border-small border-default-200 px-1 py-2">
+						<Listbox
+							aria-label="custom dates"
+							variant="light"
+							emptyContent="No custom dates"
+						>
+							{customDates.map((item, index) => (
+								<ListboxItem
+									key={item.toString() + index.toString()}
+									endContent={
+										<Button
+											aria-label={`delete custom date ${item.toString()}`}
+											isIconOnly
+											variant="light"
+											size="sm"
+											onPress={() =>
+												setCustomDates(customDates.toSpliced(index, 1))
+											}
+										>
+											<FontAwesomeIcon size="xs" icon={faX} />
+										</Button>
+									}
+								>
+									{item.toString()}
+								</ListboxItem>
+							))}
+						</Listbox>
+					</div>
+					<div className="flex items-center gap-2">
+						<Tooltip content="add date">
+							<Button isIconOnly onPress={() => addCustomDate()}>
+								<FontAwesomeIcon icon={faAdd} />
+							</Button>
+						</Tooltip>
+						<DatePicker
+							label="custom date"
+							value={dateInput}
+							onChange={setDateInput}
+							onKeyUp={addCustomDate}
+						/>
 					</div>
 				</div>
 			</div>
@@ -178,7 +173,7 @@ function App() {
 					<ModalFooter />
 				</ModalContent>
 			</Modal>
-		</>
+		</div>
 	);
 }
 

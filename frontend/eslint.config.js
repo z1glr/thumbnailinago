@@ -3,6 +3,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import { defineConfig } from "eslint/config";
+import tailwind from "eslint-plugin-tailwindcss";
 
 export default defineConfig([
 	{
@@ -29,4 +30,5 @@ export default defineConfig([
 	tseslint.configs.strict,
 	reactPlugin.configs.flat.recommended,
 	reactPlugin.configs.flat["jsx-runtime"],
+	...tailwind.configs["flat/recommended"],
 ]);
