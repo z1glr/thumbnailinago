@@ -1,10 +1,23 @@
 module thumbnailinago
 
-go 1.23
+go 1.24
+
+toolchain go1.24.2
 
 require (
 	github.com/wailsapp/wails/v2 v2.10.1
 	gopkg.in/yaml.v3 v3.0.1
+)
+
+require (
+	github.com/HugoSmits86/nativewebp v1.1.0 // indirect
+	github.com/hhrutter/lzw v1.0.0 // indirect
+	github.com/hhrutter/tiff v1.0.1 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/pdfcpu/pdfcpu v0.5.0 // indirect
+	github.com/sunshineplan/pdf v1.0.7 // indirect
+	golang.org/x/image v0.25.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
 require (
@@ -25,6 +38,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/samber/lo v1.49.1 // indirect
+	github.com/sunshineplan/imgconv v1.1.14
 	github.com/tkrajina/go-reflector v0.5.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
@@ -33,7 +47,7 @@ require (
 	golang.org/x/crypto v0.33.0 // indirect
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 )
 
 // replace github.com/wailsapp/wails/v2 v2.10.1 => /home/z1glr/coding/thumbnailinago

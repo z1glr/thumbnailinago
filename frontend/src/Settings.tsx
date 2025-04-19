@@ -47,7 +47,7 @@ export default function Settings({
 	onOpenChange: (isOpen: boolean) => void;
 }) {
 	const [locale, setLocale] = useState<SharedSelection>(new Set(["en"]));
-	const [days, setDays] = useState<string[]>(["sunday"]);
+	const [days, setDays] = useState<string[]>(["Sunday"]);
 	const [replacementKey, setReplacementKey] = useState("SUNDAY_DATE");
 	const [dateFormat, setDateFormat] = useState(
 		"{{.Day}}. {{.Month}} {{.Year}}",

@@ -14,6 +14,8 @@ import (
 	"thumbnailinago/pkg/locales"
 	"time"
 
+	"github.com/sunshineplan/imgconv"
+
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 	"gopkg.in/yaml.v3"
 )
@@ -182,11 +184,21 @@ func (a *App) RefreshPreview() (FrontendTemplate, error) {
 	return FrontendTemplate{SVG: preview, Name: filepath.Base(Settings.Paths.SVG)}, nil
 }
 
+type ImageType string
+
+const (
+	PNG ImageType = "png"
+	JPG ImageType = "jpg"
+	PDF ImageType = "pdf"
+	SVG ImageType = "svg"
+)
+
 type GenerateThumbnailsJob struct {
-	From        string   `json:"from"`
-	To          string   `json:"to"`
-	Time        string   `json:"time"`
-	CustomDates []string `json:"customDates"`
+	From        string    `json:"from"`
+	To          string    `json:"to"`
+	Time        string    `json:"time"`
+	CustomDates []string  `json:"customDates"`
+	Type        ImageType `json:"type"`
 }
 
 func (a *App) GenerateThumbnails(job GenerateThumbnailsJob) (int, error) {
@@ -238,9 +250,10 @@ func (a *App) GenerateThumbnails(job GenerateThumbnailsJob) (int, error) {
 						Time:   &job.Time,
 						SVG:    &Settings.SVG,
 						OutDir: &outDir,
+						Type:   &job.Type,
 					}
 
-					if err := data.generate(); err != nil {
+					if err := data.generate(a); err != nil {
 						return exportCount, err
 					} else {
 						exportCount++
@@ -261,9 +274,10 @@ func (a *App) GenerateThumbnails(job GenerateThumbnailsJob) (int, error) {
 						Time:   &job.Time,
 						SVG:    &Settings.SVG,
 						OutDir: &outDir,
+						Type:   &job.Type,
 					}
 
-					if err := data.generate(); err != nil {
+					if err := data.generate(a); err != nil {
 						return exportCount, err
 					} else {
 						exportCount++
@@ -281,12 +295,14 @@ type ThumbnailData struct {
 	Time   *string
 	SVG    *string
 	OutDir *string
+	Type   *ImageType
 }
 
 // generate thumbnail
-func (d *ThumbnailData) generate() error {
-	filename := filepath.Join(*d.OutDir, fmt.Sprintf("%s.%s.png", d.Date.Format(time.DateOnly), *d.Time))
+func (d *ThumbnailData) generate(a *App) error {
+	filename := filepath.Join(*d.OutDir, fmt.Sprintf("%s.%s.%s", d.Date.Format(time.DateOnly), *d.Time, *d.Type))
 
+	// create a map with the dates localized
 	dateMap := locales.Create(Settings.Frontend.Locale, &d.Date)
 
 	var date bytes.Buffer
@@ -301,10 +317,33 @@ func (d *ThumbnailData) generate() error {
 
 		file.WriteString(strings.ReplaceAll(*d.SVG, Settings.Frontend.ReplacementKey, date.String()))
 
-		inkscapeCommand := exec.Command(Settings.Paths.Inkscape, file.Name(), "-o", filename)
+		// if the type is jpg, export to a temporary file
+		exportFilename := filename
+		if *d.Type == "jpg" {
+			if tempPng, err := os.CreateTemp(os.TempDir(), "*.png"); err != nil {
+				return err
+			} else {
+				defer os.Remove(tempPng.Name())
+
+				exportFilename = tempPng.Name()
+			}
+		}
+
+		inkscapeCommand := exec.Command(Settings.Paths.Inkscape, file.Name(), "-o", exportFilename)
 
 		if err := inkscapeCommand.Run(); err != nil {
 			return err
+		}
+
+		if *d.Type == "jpg" {
+			// load the png into the converter
+			if exportImg, err := imgconv.Open(exportFilename); err != nil {
+				return err
+			} else if exportFile, err := os.Create(filename); err != nil {
+				return err
+			} else if err := imgconv.Write(exportFile, exportImg, &imgconv.FormatOption{Format: imgconv.JPEG, EncodeOption: []imgconv.EncodeOption{imgconv.Quality(100)}}); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -323,7 +362,7 @@ func init() {
 				SettingsYAML: SettingsYAML{
 					Frontend: FrontendSettings{
 						Locale:         "en",
-						Days:           []string{"sunday"},
+						Days:           []string{"Sunday"},
 						ReplacementKey: "SUNDAY_DATE",
 						DateFormat:     "{{.Day}}. {{.Month}} {{.Year}}",
 					},

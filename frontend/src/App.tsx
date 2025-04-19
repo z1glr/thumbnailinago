@@ -50,7 +50,7 @@ function App() {
 		}
 	}
 
-	async function generate() {
+	async function generate(type: string) {
 		if (dateRange && time) {
 			setShowSpinner(true);
 
@@ -62,6 +62,7 @@ function App() {
 					to: dateRange.end.toString(),
 					time: time.toString(),
 					customDates: customDates.map((dt) => dt.toString()),
+					type,
 				});
 			} catch (err) {
 				addToast({

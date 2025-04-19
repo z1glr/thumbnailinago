@@ -37,6 +37,7 @@ export namespace main {
 	    to: string;
 	    time: string;
 	    customDates: string[];
+	    type: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new GenerateThumbnailsJob(source);
@@ -48,6 +49,7 @@ export namespace main {
 	        this.to = source["to"];
 	        this.time = source["time"];
 	        this.customDates = source["customDates"];
+	        this.type = source["type"];
 	    }
 	}
 

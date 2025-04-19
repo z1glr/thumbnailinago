@@ -8,6 +8,11 @@ import {
 	addToast,
 	Button,
 	ButtonGroup,
+	Modal,
+	ModalBody,
+	ModalContent,
+	ModalFooter,
+	ModalHeader,
 	Navbar,
 	NavbarContent,
 	NavbarItem,
@@ -19,14 +24,34 @@ import { OpenTemplate, RefreshPreview } from "../wailsjs/go/main/App";
 import { svgStore } from "./zustand";
 import { main } from "../wailsjs/go/models";
 
+const imageTypes: { label: string; key: string }[] = [
+	{
+		key: "png",
+		label: "PNG",
+	},
+	{
+		key: "jpg",
+		label: "JPG",
+	},
+	{
+		key: "pdf",
+		label: "PDF",
+	},
+	{
+		key: "svg",
+		label: "SVG",
+	},
+];
+
 export default function NavigationBar({
 	exportDisabled,
 	onGenerate,
 }: {
 	exportDisabled: boolean;
-	onGenerate: () => void;
+	onGenerate: (type: string) => void;
 }) {
 	const [showSettings, setShowSettings] = useState(false);
+	const [showFileTypeDialogue, setShowFileTypeDialogue] = useState(false);
 
 	const templateName = svgStore((state) => state.name);
 	const setSVG = svgStore((state) => state.setSVG);
@@ -109,7 +134,7 @@ export default function NavigationBar({
 							<Button
 								aria-label="generate thumbnails"
 								isIconOnly
-								onPress={onGenerate}
+								onPress={() => setShowFileTypeDialogue(true)}
 								disabled={exportDisabled}
 							>
 								<FontAwesomeIcon icon={faFloppyDisk} />
@@ -125,6 +150,31 @@ export default function NavigationBar({
 					if (!state) refreshPreview();
 				}}
 			/>
+			<Modal
+				isOpen={showFileTypeDialogue}
+				onOpenChange={setShowFileTypeDialogue}
+			>
+				<ModalContent>
+					<ModalHeader>Thumbnail type</ModalHeader>
+					<ModalBody>
+						<div className="flex justify-center gap-2">
+							{imageTypes.map((it) => (
+								<Button
+									key={it.key}
+									color="primary"
+									onPress={() => {
+										setShowFileTypeDialogue(false);
+										onGenerate(it.key);
+									}}
+								>
+									{it.label}
+								</Button>
+							))}
+						</div>
+					</ModalBody>
+					<ModalFooter></ModalFooter>
+				</ModalContent>
+			</Modal>
 		</>
 	);
 }
