@@ -88,10 +88,10 @@ function App() {
 		<div className="flex h-screen w-screen flex-col">
 			<NavigationBar exportDisabled={svg.length === 0} onGenerate={generate} />
 
-			<div className="m-4 flex flex-1 justify-between gap-2">
-				<div className="flex flex-col">
+			<div className="m-4 flex flex-1 gap-2">
+				<div className="flex flex-col justify-between">
 					<h3 className="text-lg font-semibold">Preview</h3>
-					<div className="my-auto flex aspect-video h-[80vh] items-center justify-center overflow-hidden rounded-small border-small border-default-200">
+					<div className="flex aspect-video h-[80vh] items-center justify-center overflow-hidden rounded-small border-small border-default-200">
 						{svg.length > 0 ? (
 							<img
 								src={`data:image/svg+xml;utf-8,${encodeURIComponent(svg)}`}
