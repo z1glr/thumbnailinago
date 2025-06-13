@@ -131,42 +131,45 @@ type FrontendTemplate struct {
 
 // opens and loads a template-file
 func (a *App) OpenTemplate() (FrontendTemplate, error) {
-	if dir, err := filepath.EvalSymlinks(filepath.Dir(Settings.Paths.SVG)); err != nil {
-		return FrontendTemplate{}, err
-	} else {
-		// check, wether the directory of the last svg-file exists
-		if _, err := os.Stat(dir); err != nil {
-			dir = ""
-		}
+	var svgPath string
+	var err error
 
-		if file, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-			Title:            "Open Template",
-			DefaultDirectory: dir,
-			Filters: []runtime.FileFilter{
-				{
-					DisplayName: "SVG-File (*.svg)",
-					Pattern:     "*.svg",
-				},
+	if svgPath, err = filepath.EvalSymlinks(filepath.Dir(Settings.Paths.SVG)); err != nil {
+		svgPath = ""
+		// return FrontendTemplate{}, err
+	}
+	// check, wether the directory of the last svg-file exists
+	if _, err := os.Stat(svgPath); err != nil {
+		svgPath = ""
+	}
+
+	if file, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+		Title:            "Open Template",
+		DefaultDirectory: svgPath,
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "SVG-File (*.svg)",
+				Pattern:     "*.svg",
 			},
-		}); err != nil {
+		},
+	}); err != nil {
+		return FrontendTemplate{}, err
+
+		// check for an empty-file value (=file-selection cancelled)
+	} else if len(file) == 0 {
+		return FrontendTemplate{}, nil
+	} else {
+		// read the file-content
+		if content, err := os.ReadFile(file); err != nil {
 			return FrontendTemplate{}, err
-
-			// check for an empty-file value (=file-selection cancelled)
-		} else if len(file) == 0 {
-			return FrontendTemplate{}, nil
 		} else {
-			// read the file-content
-			if content, err := os.ReadFile(file); err != nil {
-				return FrontendTemplate{}, err
-			} else {
-				// store the template
-				Settings.SVG = string(content)
+			// store the template
+			Settings.SVG = string(content)
 
-				// store the path
-				Settings.Paths.SVG = file
+			// store the path
+			Settings.Paths.SVG = file
 
-				return a.RefreshPreview()
-			}
+			return a.RefreshPreview()
 		}
 	}
 }
